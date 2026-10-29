@@ -1,0 +1,106 @@
+// ==UserScript==
+// @name         Single Enter
+// @namespace    
+// @version      1.0
+// @description  
+// @author       denerou
+// @license      MIT
+// @match        https://animemusicquiz.com/*
+// @match        https://*.animemusicquiz.com/*
+// @grant        none
+// @run-at       document-end
+// @homepageURL  
+// @supportURL   
+// @updateURL    
+// @downloadURL  
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    const ENTER_KEY_CODE = 13;
+    const LOADING_CHECK_INTERVAL = 500;
+
+    const getImmediateSuggestion = () => {
+        try {
+            return quiz.answerInput.typingInput.autoCompleteController.awesomepleteInstance
+                .suggestions?.[0]?.value || "";
+        } catch (_) {
+            return "";
+        }
+    };
+
+    const getSuggestions = (maxTimeout = 100) => {
+        const ul = document.querySelector("#qpAnswerInputContainer .awesomplete ul");
+
+        if (!ul) return Promise.resolve(getImmediateSuggestion());
+
+        const getFirstSuggestion = () =>
+            ul.querySelector("li")?.textContent.trim() || getImmediateSuggestion();
+
+        if (!ul.hasAttribute("hidden")) {
+            return Promise.resolve(getFirstSuggestion());
+        }
+
+        return new Promise((resolve) => {
+            const observer = new MutationObserver(() => {
+                if (!ul.hasAttribute("hidden")) {
+                    finish(getFirstSuggestion());
+                }
+            });
+
+            const finish = (suggestion) => {
+                clearTimeout(timeout);
+                observer.disconnect();
+                resolve(suggestion);
+            };
+
+            const timeout = setTimeout(
+                () => finish(getImmediateSuggestion()),
+                maxTimeout
+            );
+
+            observer.observe(ul, {
+                attributes: true,
+                attributeFilter: ["hidden"],
+            });
+        });
+    };
+
+    const submitAnswerAndClose = (answer) => {
+        $("#qpAnswerInput").val(answer);
+        quiz.answerInput.submitAnswer(true);
+        quiz.answerInput.activeInputController.autoCompleteController.awesomepleteInstance.close();
+    };
+
+    const setupDropD = () => {
+        $("#qpAnswerInput").on("keydown", async function (event) {
+            if (event.which !== ENTER_KEY_CODE) return;
+
+            const value = $(this).val();
+            if (typeof value !== "string" || !value.trim()) return;
+
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            const instance = quiz.answerInput.typingInput.autoCompleteController.awesomepleteInstance;
+
+            const highlighted = instance.$ul
+                .children("li")
+                .filter('[aria-selected="true"]')
+                .text()
+                .trim();
+
+            const suggestion = highlighted || await getSuggestions();
+            submitAnswerAndClose(suggestion || value);
+        });
+    };
+
+    // Ждем загрузки игры
+    const loadCheck = setInterval(() => {
+        if ($("#loadingScreen").hasClass("hidden")) {
+            clearInterval(loadCheck);
+            setupDropD();
+        }
+    }, LOADING_CHECK_INTERVAL);
+})();
