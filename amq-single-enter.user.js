@@ -10,8 +10,8 @@
 // @grant        none
 // @run-at       document-end
 // @homepageURL  https://github.com/denerou/amq-single-enter
-// @updateURL    https://raw.githubusercontent.com/denerou/amq-single-enter/main/AMQ%20Single%20Enter
-// @downloadURL  https://raw.githubusercontent.com/denerou/amq-single-enter/main/AMQ%20Single%20Enter
+// @updateURL    https://raw.githubusercontent.com/denerou/amq-single-enter/main/single-enter.user.js
+// @downloadURL  https://raw.githubusercontent.com/denerou/amq-single-enter/main/single-enter.user.js
 // ==/UserScript==
 
 (function () {
