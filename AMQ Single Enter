@@ -13,6 +13,7 @@
 // @updateURL    https://raw.githubusercontent.com/denerou/amq-single-enter/main/AMQ%20Single%20Enter
 // @downloadURL  https://raw.githubusercontent.com/denerou/amq-single-enter/main/AMQ%20Single%20Enter
 // ==/UserScript==
+
 (function () {
     'use strict';
 
@@ -30,7 +31,6 @@
 
     const getSuggestions = (maxTimeout = 100) => {
         const ul = document.querySelector("#qpAnswerInputContainer .awesomplete ul");
-
         if (!ul) return Promise.resolve(getImmediateSuggestion());
 
         const getFirstSuggestion = () =>
@@ -57,7 +57,6 @@
                 () => finish(getImmediateSuggestion()),
                 maxTimeout
             );
-
             observer.observe(ul, {
                 attributes: true,
                 attributeFilter: ["hidden"],
@@ -82,7 +81,6 @@
             event.stopImmediatePropagation();
 
             const instance = quiz.answerInput.typingInput.autoCompleteController.awesomepleteInstance;
-
             const highlighted = instance.$ul
                 .children("li")
                 .filter('[aria-selected="true"]')
