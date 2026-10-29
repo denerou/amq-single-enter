@@ -9,10 +9,9 @@
 // @match        https://*.animemusicquiz.com/*
 // @grant        none
 // @run-at       document-end
-// @homepageURL  https://github.com/denerou/Single-Enter
-// @supportURL   https://github.com/denerou/Single-Enter/issues
-// @updateURL    https://raw.githubusercontent.com/denerou/Single-Enter/main/Single-Enter
-// @downloadURL  https://raw.githubusercontent.com/denerou/Single-Enter/main/Single-Enter
+// @homepageURL  https://github.com/denerou/amq-single-enter
+// @updateURL    https://raw.githubusercontent.com/denerou/amq-single-enter/main/
+// @downloadURL  https://raw.githubusercontent.com/denerou/amq-single-enter/main/
 // ==/UserScript==
 (function () {
     'use strict';
