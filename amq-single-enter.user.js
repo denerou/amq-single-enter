@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Single Enter
-// @namespace    https://github.com/denerou/Single-Enter
-// @version      1.0
-// @description  
+// @namespace    https://github.com/denerou/amq-single-enter
+// @version      1.1
+// @description  Makes double enter
 // @author       denerou
 // @license      MIT
 // @match        https://animemusicquiz.com/*
@@ -18,85 +18,47 @@
     'use strict';
 
     const ENTER_KEY_CODE = 13;
-    const LOADING_CHECK_INTERVAL = 500;
+    let injecting = false;
 
-    const getImmediateSuggestion = () => {
+    function makeEnterEvent(type) {
+        const event = new KeyboardEvent(type, {
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: ENTER_KEY_CODE,
+            which: ENTER_KEY_CODE,
+            bubbles: true,
+            cancelable: true,
+        });
+        
         try {
-            return quiz.answerInput.typingInput.autoCompleteController.awesomepleteInstance
-                .suggestions?.[0]?.value || "";
-        } catch (_) {
-            return "";
+            Object.defineProperty(event, 'keyCode', { get: () => ENTER_KEY_CODE });
+            Object.defineProperty(event, 'which',   { get: () => ENTER_KEY_CODE });
+        } catch (_) {}
+
+        return event;
+    }
+
+    function fireEnterSequence() {
+        const input = document.querySelector('#qpAnswerInput');
+        if (!input) return;
+        
+        injecting = true;
+        try {
+            input.dispatchEvent(makeEnterEvent('keydown'));
+            input.dispatchEvent(makeEnterEvent('keypress'));
+            input.dispatchEvent(makeEnterEvent('keyup'));
+        } finally {
+            injecting = false;
         }
-    };
-
-    const getSuggestions = (maxTimeout = 100) => {
-        const ul = document.querySelector("#qpAnswerInputContainer .awesomplete ul");
-        if (!ul) return Promise.resolve(getImmediateSuggestion());
-
-        const getFirstSuggestion = () =>
-            ul.querySelector("li")?.textContent.trim() || getImmediateSuggestion();
-
-        if (!ul.hasAttribute("hidden")) {
-            return Promise.resolve(getFirstSuggestion());
+    }
+    
+    document.addEventListener('keydown', function (event) {
+        if (injecting) return;
+        if (event.target?.id !== 'qpAnswerInput') return;
+        if (event.key !== 'Enter' && event.which !== ENTER_KEY_CODE && event.keyCode !== ENTER_KEY_CODE) {
+            return;
         }
 
-        return new Promise((resolve) => {
-            const observer = new MutationObserver(() => {
-                if (!ul.hasAttribute("hidden")) {
-                    finish(getFirstSuggestion());
-                }
-            });
-
-            const finish = (suggestion) => {
-                clearTimeout(timeout);
-                observer.disconnect();
-                resolve(suggestion);
-            };
-
-            const timeout = setTimeout(
-                () => finish(getImmediateSuggestion()),
-                maxTimeout
-            );
-            observer.observe(ul, {
-                attributes: true,
-                attributeFilter: ["hidden"],
-            });
-        });
-    };
-
-    const submitAnswerAndClose = (answer) => {
-        $("#qpAnswerInput").val(answer);
-        quiz.answerInput.submitAnswer(true);
-        quiz.answerInput.activeInputController.autoCompleteController.awesomepleteInstance.close();
-    };
-
-    const setupDropD = () => {
-        $("#qpAnswerInput").on("keydown", async function (event) {
-            if (event.which !== ENTER_KEY_CODE) return;
-
-            const value = $(this).val();
-            if (typeof value !== "string" || !value.trim()) return;
-
-            event.preventDefault();
-            event.stopImmediatePropagation();
-
-            const instance = quiz.answerInput.typingInput.autoCompleteController.awesomepleteInstance;
-            const highlighted = instance.$ul
-                .children("li")
-                .filter('[aria-selected="true"]')
-                .text()
-                .trim();
-
-            const suggestion = highlighted || await getSuggestions();
-            submitAnswerAndClose(suggestion || value);
-        });
-    };
-
-    // Ждем загрузки игры
-    const loadCheck = setInterval(() => {
-        if ($("#loadingScreen").hasClass("hidden")) {
-            clearInterval(loadCheck);
-            setupDropD();
-        }
-    }, LOADING_CHECK_INTERVAL);
+        setTimeout(fireEnterSequence, 0);
+    }, true);
 })();
